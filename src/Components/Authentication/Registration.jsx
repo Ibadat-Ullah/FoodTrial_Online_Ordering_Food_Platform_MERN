@@ -1,13 +1,20 @@
+import { Link, useNavigate } from "react-router-dom";
+
 function Registration() {
+  const navigate = useNavigate();
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <section className="w-full max-w-md space-y-4 rounded-xl bg-white p-8 shadow">
-        <a href="#home" className="text-2xl font-bold text-orange-600">
+        <Link to="/" className="text-2xl font-bold text-orange-600">
           FoodTrial
-        </a>
+        </Link>
         <h1 className="text-2xl font-bold">Register</h1>
         <form
-          onSubmit={(event) => event.preventDefault()}
+          onSubmit={(event) => {
+            event.preventDefault();
+            navigate("/admin");
+          }}
           className="space-y-4"
         >
           <label className="block">
@@ -54,18 +61,18 @@ function Registration() {
         <p className="text-sm text-gray-500">
           Authentication is not connected yet.
         </p>
-        <a
-          href="#home"
+        <Link
+          to="/"
           className="block text-sm text-orange-600 hover:underline"
         >
           Continue as guest
-        </a>
-        <a
-          href="#login"
+        </Link>
+        <Link
+          to="/login"
           className="inline-block rounded border border-orange-600 px-4 py-2 text-orange-600 hover:bg-orange-50"
         >
           Already have an account? Login
-        </a>
+        </Link>
       </section>
     </main>
   );

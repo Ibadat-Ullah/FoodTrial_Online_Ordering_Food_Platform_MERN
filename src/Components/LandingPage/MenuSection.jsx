@@ -92,7 +92,7 @@ function MenuSection() {
   const visibleItems = showAll ? menuItems : menuItems.slice(0, 6);
 
   return (
-    <section id="menu" className="px-6 py-16 sm:px-10 lg:px-16">
+    <section id="menu" className="scroll-mt-20 px-6 py-16 sm:px-10 lg:px-16">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900">Our Menu</h2>

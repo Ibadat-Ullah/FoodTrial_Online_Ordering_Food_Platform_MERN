@@ -1,18 +1,22 @@
+import { Link } from "react-router-dom";
+
 function Footer() {
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
   return (
     <footer className="outline outline-2 outline-[#ff4500] bg-gradient-to-br from-orange-600 via-orange-700 to-red-700 px-6 py-12 text-orange-50 sm:px-10 lg:px-16">
       <div className="mx-auto grid max-w-7xl gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <a href="#home" className="text-2xl font-bold text-white">
+          <Link to="/" onClick={scrollToTop} className="text-2xl font-bold text-white">
             FoodTrial
-          </a>
+          </Link>
           <p className="mt-4 max-w-sm leading-6 text-orange-100">
             Find your next favorite meal and enjoy a simple way to order food.
           </p>
         </div>
 
         <div>
-          <h2 id="about" className="font-semibold text-white">
+          <h2 id="about" className="scroll-mt-20 font-semibold text-white">
             About Us
           </h2>
           <p className="mt-4 leading-6 text-orange-100">
@@ -25,19 +29,19 @@ function Footer() {
           <h2 className="font-semibold text-white">Explore</h2>
           <ul className="mt-4 space-y-3">
             <li>
-              <a href="#home" className="transition-colors hover:text-white">
+              <Link to="/" onClick={scrollToTop} className="transition-colors hover:text-white">
                 Home
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#menu" className="transition-colors hover:text-white">
+              <Link to="/#menu" className="transition-colors hover:text-white">
                 Menu
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#login" className="transition-colors hover:text-white">
+              <Link to="/login" className="transition-colors hover:text-white">
                 Login
-              </a>
+              </Link>
             </li>
           </ul>
         </div>

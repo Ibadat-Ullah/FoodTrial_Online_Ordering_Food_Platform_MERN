@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import CreateFood from "./food/CreateFood";
 import DeleteFood from "./food/DeleteFood";
 import UpdateFood from "./food/UpdateFood";
@@ -25,12 +26,12 @@ function AdminMain() {
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
         <div className="flex gap-3">
-          <a
-            href="#home"
+          <Link
+            to="/"
             className="rounded-md border border-orange-600 px-4 py-2 font-medium text-orange-700 hover:bg-orange-50"
           >
             Back to Home
-          </a>
+          </Link>
           <button
             type="button"
             className="rounded-md bg-orange-600 px-4 py-2 font-medium text-white hover:bg-orange-700"
