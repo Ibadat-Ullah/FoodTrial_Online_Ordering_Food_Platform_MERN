@@ -37,6 +37,19 @@ function Navigation({ activeForm, onSelect }) {
   return (
     <aside className="w-60 shrink-0 border-r border-gray-200 bg-white p-4">
       <nav aria-label="Admin dashboard navigation" className="space-y-2">
+        <button
+          type="button"
+          onClick={() => onSelect("viewAll")}
+          aria-current={activeForm === "viewAll" ? "page" : undefined}
+          className={`w-full rounded-md px-3 py-2 text-left font-semibold ${
+            activeForm === "viewAll"
+              ? "bg-orange-100 text-orange-800"
+              : "text-gray-800 hover:bg-orange-50"
+          }`}
+        >
+          View All
+        </button>
+
         {sections.map((section) => (
           <div key={section.id}>
             <button
