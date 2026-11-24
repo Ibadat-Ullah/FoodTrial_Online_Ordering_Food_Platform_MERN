@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { apiError, ridersApi } from "../../../service/api";
+import riderController from "../../../controllers/riderController";
 
 const optionalText = z.string().trim().min(2, "Use at least 2 characters.").max(60, "Value is too long.").or(z.literal(""));
 const schema = z.object({
@@ -32,11 +32,11 @@ function UpdateRider() {
       Object.entries(fields).filter(([, value]) => value !== ""),
     );
     try {
-      await ridersApi.update(riderId, values);
+      await riderController.update(riderId, values);
       reset();
       setMessage("Rider updated.");
     } catch (error) {
-      setMessage(apiError(error));
+      setMessage(error.message);
     }
   };
 

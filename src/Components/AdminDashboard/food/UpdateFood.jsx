@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { apiError, foodsApi } from "../../../service/api";
+import foodController from "../../../controllers/foodController";
 
 const optionalText = z.string().trim().min(2, "Use at least 2 characters.").max(80, "Value is too long.").or(z.literal(""));
 const schema = z.object({
@@ -31,11 +31,11 @@ function UpdateFood() {
       Object.entries(fields).filter(([, value]) => value !== ""),
     );
     try {
-      await foodsApi.update(foodId, values);
+      await foodController.update(foodId, values);
       reset();
       setMessage("Food updated.");
     } catch (error) {
-      setMessage(apiError(error));
+      setMessage(error.message);
     }
   };
 

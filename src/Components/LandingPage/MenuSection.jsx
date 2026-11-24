@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { foodsApi } from "../../service/api";
+import foodController from "../../controllers/foodController";
 
 const menuItems = [
   {
@@ -94,10 +94,10 @@ function MenuSection() {
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    foodsApi.list()
+    foodController.list()
       .then(setItems)
       .catch((error) => {
-        setLoadError(error.response?.data?.message || "Could not load menu from the server.");
+        setLoadError(error.message);
       });
   }, []);
 

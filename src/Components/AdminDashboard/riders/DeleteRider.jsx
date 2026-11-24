@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { apiError, ridersApi } from "../../../service/api";
+import riderController from "../../../controllers/riderController";
 
 const schema = z.object({
   riderId: z.string().trim().min(1, "Enter a rider ID.").max(64, "Rider ID is too long."),
@@ -18,11 +18,11 @@ function DeleteRider() {
   const onSubmit = async ({ riderId }) => {
     setMessage("");
     try {
-      await ridersApi.remove(riderId);
+      await riderController.remove(riderId);
       reset();
       setMessage("Rider deleted.");
     } catch (error) {
-      setMessage(apiError(error));
+      setMessage(error.message);
     }
   };
 

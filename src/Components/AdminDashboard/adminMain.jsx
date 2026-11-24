@@ -7,7 +7,8 @@ import CreateRider from "./riders/CreateRider";
 import DeleteRider from "./riders/DeleteRider";
 import UpdateRider from "./riders/UpdateRider";
 import Navigation from "./navigation";
-import { foodsApi, ridersApi } from "../../service/api";
+import foodController from "../../controllers/foodController";
+import riderController from "../../controllers/riderController";
 
 const forms = {
   createFood: CreateFood,
@@ -72,7 +73,9 @@ function AdminMain() {
     }
 
     let cancelled = false;
-    const request = viewAllFilter === "Food" ? foodsApi.list() : ridersApi.list();
+    const request = viewAllFilter === "Food"
+      ? foodController.list()
+      : riderController.list();
 
     request
       .then((data) => {
@@ -85,7 +88,7 @@ function AdminMain() {
       .catch((error) => {
         if (!cancelled) {
           setRecords([]);
-          setRecordsError(error.response?.data?.message || "Could not load records.");
+          setRecordsError(error.message);
           setRecordsLoading(false);
         }
       })

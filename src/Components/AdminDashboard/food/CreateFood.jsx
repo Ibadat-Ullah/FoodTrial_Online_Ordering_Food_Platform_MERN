@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { apiError, foodsApi } from "../../../service/api";
+import foodController from "../../../controllers/foodController";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters.").max(80, "Name is too long."),
@@ -21,11 +21,11 @@ function CreateFood() {
   const onSubmit = async (values) => {
     setMessage("");
     try {
-      await foodsApi.create(values);
+      await foodController.create(values);
       reset();
       setMessage("Food created.");
     } catch (error) {
-      setMessage(apiError(error));
+      setMessage(error.message);
     }
   };
 

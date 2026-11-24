@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { apiError, foodsApi } from "../../../service/api";
+import foodController from "../../../controllers/foodController";
 
 const schema = z.object({
   foodId: z.string().trim().min(1, "Enter a food ID.").max(64, "Food ID is too long."),
@@ -18,11 +18,11 @@ function DeleteFood() {
   const onSubmit = async ({ foodId }) => {
     setMessage("");
     try {
-      await foodsApi.remove(foodId);
+      await foodController.remove(foodId);
       reset();
       setMessage("Food deleted.");
     } catch (error) {
-      setMessage(apiError(error));
+      setMessage(error.message);
     }
   };
 
