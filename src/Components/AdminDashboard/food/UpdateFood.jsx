@@ -1,6 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { apiError, foodsApi } from "../../../service/api";
 
 const optionalText = z.string().trim().min(2, "Use at least 2 characters.").max(80, "Value is too long.").or(z.literal(""));
 const schema = z.object({
@@ -17,13 +19,29 @@ const schema = z.object({
 );
 
 function UpdateFood() {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const [message, setMessage] = useState("");
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
+    defaultValues: { name: "", category: "", description: "", price: "", image: "" },
   });
+
+  const onSubmit = async ({ foodId, ...fields }) => {
+    setMessage("");
+    const values = Object.fromEntries(
+      Object.entries(fields).filter(([, value]) => value !== ""),
+    );
+    try {
+      await foodsApi.update(foodId, values);
+      reset();
+      setMessage("Food updated.");
+    } catch (error) {
+      setMessage(apiError(error));
+    }
+  };
 
   return (
     <form
-      onSubmit={handleSubmit(() => {})}
+      onSubmit={handleSubmit(onSubmit)}
       noValidate
       className="mx-auto max-w-xl space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
     >
@@ -77,12 +95,10 @@ function UpdateFood() {
         />
         {errors.image && <p className="text-sm text-red-600">{errors.image.message}</p>}
       </label>
-      <button type="submit" className="rounded-md bg-orange-600 px-4 py-2 text-white hover:bg-orange-700">
-        Update food
+      <button disabled={isSubmitting} className="rounded-md bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50">
+        {isSubmitting ? "Updating..." : "Update food"}
       </button>
-      <p className="text-sm text-gray-500">
-        Form only; backend submission is not connected.
-      </p>
+      {message && <p role="status" className="text-sm text-gray-700">{message}</p>}
     </form>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import CreateFood from "./food/CreateFood";
 import DeleteFood from "./food/DeleteFood";
@@ -7,6 +7,7 @@ import CreateRider from "./riders/CreateRider";
 import DeleteRider from "./riders/DeleteRider";
 import UpdateRider from "./riders/UpdateRider";
 import Navigation from "./navigation";
+import { foodsApi, ridersApi } from "../../service/api";
 
 const forms = {
   createFood: CreateFood,
@@ -58,9 +59,41 @@ const sampleRecords = {
 function AdminMain() {
   const [activeForm, setActiveForm] = useState(null);
   const [viewAllFilter, setViewAllFilter] = useState("");
+  const [records, setRecords] = useState([]);
+  const [recordsLoading, setRecordsLoading] = useState(false);
+  const [recordsError, setRecordsError] = useState("");
   const ActiveForm = activeForm && activeForm !== "viewAll"
     ? forms[activeForm]
     : null;
+
+  useEffect(() => {
+    if (activeForm !== "viewAll" || !["Food", "Riders"].includes(viewAllFilter)) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    const request = viewAllFilter === "Food" ? foodsApi.list() : ridersApi.list();
+
+    request
+      .then((data) => {
+        if (!cancelled) {
+          setRecords(data);
+          setRecordsError("");
+          setRecordsLoading(false);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setRecords([]);
+          setRecordsError(error.response?.data?.message || "Could not load records.");
+          setRecordsLoading(false);
+        }
+      })
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeForm, viewAllFilter]);
 
   return (
     <main className="min-h-screen bg-gray-100">
@@ -85,7 +118,14 @@ function AdminMain() {
       <div className="flex min-h-[calc(100vh-73px)]">
         <Navigation
           activeForm={activeForm}
-          onSelect={setActiveForm}
+          onSelect={(form) => {
+            setActiveForm(form);
+            if (form === "viewAll" && ["Food", "Riders"].includes(viewAllFilter)) {
+              setRecords([]);
+              setRecordsError("");
+              setRecordsLoading(true);
+            }
+          }}
         />
         <section className="min-w-0 flex-1 p-6 sm:p-8">
           {activeForm === "viewAll" ? (
@@ -94,7 +134,13 @@ function AdminMain() {
                 <select
                   aria-label="Filter records"
                   value={viewAllFilter}
-                  onChange={(event) => setViewAllFilter(event.target.value)}
+                  onChange={(event) => {
+                    const category = event.target.value;
+                    setViewAllFilter(category);
+                    setRecords([]);
+                    setRecordsError("");
+                    setRecordsLoading(["Food", "Riders"].includes(category));
+                  }}
                   className="w-52 rounded-md border border-orange-600 bg-white px-3 py-2 text-gray-700"
                 >
                   <option value="">Choose a category</option>
@@ -108,30 +154,72 @@ function AdminMain() {
               {viewAllFilter && (
                 <div className="mt-6 overflow-x-auto rounded-lg bg-white shadow-sm">
                   <p className="px-4 pt-4 text-sm text-gray-500">
-                    Sample data for layout preview
+                    {["Food", "Riders"].includes(viewAllFilter)
+                      ? "Records from MongoDB"
+                      : "Sample data for layout preview"}
                   </p>
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-orange-50 text-gray-700">
-                      <tr>
-                        {sampleRecords[viewAllFilter].columns.map((column) => (
-                          <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">
-                            {column}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {sampleRecords[viewAllFilter].rows.map((row) => (
-                        <tr key={row[0]} className="text-gray-700">
-                          {row.map((value, index) => (
-                            <td key={`${row[0]}-${index}`} className="whitespace-nowrap px-4 py-3">
-                              {value}
-                            </td>
+                  {["Food", "Riders"].includes(viewAllFilter) ? (
+                    recordsLoading ? (
+                      <p className="px-4 py-6 text-sm text-gray-600">Loading records...</p>
+                    ) : recordsError ? (
+                      <p role="alert" className="px-4 py-6 text-sm text-red-600">{recordsError}</p>
+                    ) : records.length === 0 ? (
+                      <p className="px-4 py-6 text-sm text-gray-600">No records found.</p>
+                    ) : (
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-orange-50 text-gray-700">
+                          <tr>
+                            {(viewAllFilter === "Food"
+                              ? ["ID", "Name", "Category", "Price"]
+                              : ["ID", "Name", "Email", "Phone", "Vehicle", "Status"]
+                            ).map((column) => (
+                              <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">{column}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {records.map((record) => (
+                            <tr key={record._id} className="text-gray-700">
+                              <td className="whitespace-nowrap px-4 py-3">{record._id}</td>
+                              <td className="whitespace-nowrap px-4 py-3">{record.name}</td>
+                              {viewAllFilter === "Food" ? (
+                                <>
+                                  <td className="whitespace-nowrap px-4 py-3">{record.category}</td>
+                                  <td className="whitespace-nowrap px-4 py-3">${record.price.toFixed(2)}</td>
+                                </>
+                              ) : (
+                                <>
+                                  <td className="whitespace-nowrap px-4 py-3">{record.email}</td>
+                                  <td className="whitespace-nowrap px-4 py-3">{record.phone}</td>
+                                  <td className="whitespace-nowrap px-4 py-3">{record.vehicleType}</td>
+                                  <td className="whitespace-nowrap px-4 py-3">{record.status}</td>
+                                </>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )
+                  ) : (
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-orange-50 text-gray-700">
+                        <tr>
+                          {sampleRecords[viewAllFilter].columns.map((column) => (
+                            <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">{column}</th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {sampleRecords[viewAllFilter].rows.map((row) => (
+                          <tr key={row[0]} className="text-gray-700">
+                            {row.map((value, index) => (
+                              <td key={`${row[0]}-${index}`} className="whitespace-nowrap px-4 py-3">{value}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               )}
             </>

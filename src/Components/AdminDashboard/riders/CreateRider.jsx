@@ -1,6 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { apiError, ridersApi } from "../../../service/api";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters.").max(60, "Name is too long."),
@@ -13,13 +15,25 @@ const schema = z.object({
 });
 
 function CreateRider() {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const [message, setMessage] = useState("");
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
   });
 
+  const onSubmit = async (values) => {
+    setMessage("");
+    try {
+      await ridersApi.create(values);
+      reset();
+      setMessage("Rider created.");
+    } catch (error) {
+      setMessage(apiError(error));
+    }
+  };
+
   return (
     <form
-      onSubmit={handleSubmit(() => {})}
+      onSubmit={handleSubmit(onSubmit)}
       noValidate
       className="mx-auto max-w-xl space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
     >
@@ -74,12 +88,10 @@ function CreateRider() {
         />
         {errors.vehicleRegistration && <p className="text-sm text-red-600">{errors.vehicleRegistration.message}</p>}
       </label>
-      <button type="submit" className="rounded-md bg-orange-600 px-4 py-2 text-white hover:bg-orange-700">
-        Create rider
+      <button disabled={isSubmitting} className="rounded-md bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50">
+        {isSubmitting ? "Saving..." : "Create rider"}
       </button>
-      <p className="text-sm text-gray-500">
-        Form only; backend submission is not connected.
-      </p>
+      {message && <p role="status" className="text-sm text-gray-700">{message}</p>}
     </form>
   );
 }

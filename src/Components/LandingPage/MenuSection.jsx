@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { foodsApi } from "../../service/api";
 
 const menuItems = [
   {
@@ -89,7 +90,18 @@ const menuItems = [
 
 function MenuSection() {
   const [showAll, setShowAll] = useState(false);
-  const visibleItems = showAll ? menuItems : menuItems.slice(0, 6);
+  const [items, setItems] = useState(menuItems);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    foodsApi.list()
+      .then(setItems)
+      .catch((error) => {
+        setLoadError(error.response?.data?.message || "Could not load menu from the server.");
+      });
+  }, []);
+
+  const visibleItems = showAll ? items : items.slice(0, 6);
 
   return (
     <section id="menu" className="scroll-mt-20 px-6 py-16 sm:px-10 lg:px-16">
@@ -100,6 +112,15 @@ function MenuSection() {
             Fresh favorites made for you.
           </p>
         </div>
+
+        {loadError && (
+          <p role="alert" className="mb-4 text-center text-sm text-red-600">
+            {loadError} Showing sample menu items.
+          </p>
+        )}
+        {items.length === 0 && !loadError && (
+          <p className="mb-4 text-center text-gray-600">No food items are available yet.</p>
+        )}
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {visibleItems.map((item) => (
@@ -117,7 +138,7 @@ function MenuSection() {
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="font-semibold text-gray-900">{item.name}</h3>
                   <span className="shrink-0 font-semibold text-orange-600">
-                    {item.price}
+                    {typeof item.price === "number" ? `$${item.price.toFixed(2)}` : item.price}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-gray-600">{item.description}</p>
@@ -126,7 +147,7 @@ function MenuSection() {
           ))}
         </div>
 
-        {menuItems.length > 6 && (
+        {items.length > 6 && (
           <div className="mt-8 text-center">
             <button
               type="button"
