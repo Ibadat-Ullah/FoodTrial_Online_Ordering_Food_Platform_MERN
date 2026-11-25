@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CreateFood from "../Components/AdminDashboard/food/CreateFood";
 import DeleteFood from "../Components/AdminDashboard/food/DeleteFood";
 import UpdateFood from "../Components/AdminDashboard/food/UpdateFood";
@@ -9,6 +9,7 @@ import UpdateRider from "../Components/AdminDashboard/riders/UpdateRider";
 import Navigation from "../Components/AdminDashboard/navigation";
 import foodController from "../controllers/foodController";
 import riderController from "../controllers/riderController";
+import { useAuth } from "../context/useAuth";
 
 const forms = {
   createFood: CreateFood,
@@ -58,6 +59,8 @@ const sampleRecords = {
 };
 
 function AdminView() {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [activeForm, setActiveForm] = useState(null);
   const [viewAllFilter, setViewAllFilter] = useState("");
   const [records, setRecords] = useState([]);
@@ -111,6 +114,10 @@ function AdminView() {
           </Link>
           <button
             type="button"
+            onClick={() => {
+              signOut();
+              navigate("/login");
+            }}
             className="rounded-md bg-orange-600 px-4 py-2 font-medium text-white hover:bg-orange-700"
           >
             Sign out

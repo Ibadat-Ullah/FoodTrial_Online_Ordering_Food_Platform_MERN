@@ -2,17 +2,29 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { useAuth } from "../context/useAuth";
+import { apiError } from "../service/api";
 
 const schema = z.object({
   email: z.string().trim().email("Enter a valid email.").max(254, "Email is too long."),
-  password: z.string().min(8, "Password must be at least 8 characters.").max(128, "Password is too long."),
+  password: z.string().min(8, "Password must be at least 8 characters.").max(72, "Password must be at most 72 characters."),
 });
 
 function LoginView() {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { signIn } = useAuth();
+  const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
   });
+
+  const onSubmit = async (values) => {
+    try {
+      await signIn(values);
+      navigate("/admin");
+    } catch (error) {
+      setError("root", { message: apiError(error) });
+    }
+  };
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
@@ -21,7 +33,7 @@ function LoginView() {
           FoodTrial
         </Link>
         <h1 className="text-2xl font-bold">Login</h1>
-        <form onSubmit={handleSubmit(() => navigate("/admin"))} noValidate className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <label className="block">
             Email
             <input
@@ -40,13 +52,11 @@ function LoginView() {
             />
             {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
           </label>
-          <button type="submit" className="w-full rounded bg-orange-600 p-2 font-semibold text-white hover:bg-orange-700">
-            Login
+          {errors.root && <p role="alert" className="text-sm text-red-600">{errors.root.message}</p>}
+          <button disabled={isSubmitting} type="submit" className="w-full rounded bg-orange-600 p-2 font-semibold text-white hover:bg-orange-700 disabled:opacity-50">
+            {isSubmitting ? "Logging in..." : "Login"}
           </button>
         </form>
-        <p className="text-sm text-gray-500">
-          Authentication is not connected yet.
-        </p>
         <Link
           to="/"
           className="block text-sm text-orange-600 hover:underline"
