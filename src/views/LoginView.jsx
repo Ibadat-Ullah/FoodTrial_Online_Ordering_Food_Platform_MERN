@@ -8,7 +8,7 @@ const schema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters.").max(128, "Password is too long."),
 });
 
-function Login() {
+function LoginView() {
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
@@ -64,4 +64,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default LoginView;

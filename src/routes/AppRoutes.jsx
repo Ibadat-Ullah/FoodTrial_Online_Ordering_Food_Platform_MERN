@@ -1,17 +1,17 @@
 import { Route, Routes } from "react-router-dom";
-import Login from "../Components/Authentication/Login";
-import Registration from "../Components/Authentication/Registration";
-import AdminMain from "../Components/AdminDashboard/adminMain";
-import LandingPage from "../Components/LandingPage";
+import LoginView from "../views/LoginView";
+import RegistrationView from "../views/RegistrationView";
+import AdminView from "../views/AdminView";
+import LandingView from "../views/LandingView";
 
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Registration />} />
-      <Route path="/admin" element={<AdminMain />} />
-      <Route path="*" element={<LandingPage />} />
+      <Route path="/" element={<LandingView />} />
+      <Route path="/login" element={<LoginView />} />
+      <Route path="/register" element={<RegistrationView />} />
+      <Route path="/admin" element={<AdminView />} />
+      <Route path="*" element={<LandingView />} />
     </Routes>
   );
 }

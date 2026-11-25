@@ -13,7 +13,7 @@ const schema = z.object({
   message: "Passwords do not match.",
 });
 
-function Registration() {
+function RegistrationView() {
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
@@ -83,4 +83,4 @@ function Registration() {
   );
 }
 
-export default Registration;
+export default RegistrationView;

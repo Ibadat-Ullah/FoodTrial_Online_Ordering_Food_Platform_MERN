@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import Carousel from "./Carousel";
-import Footer from "./Footer";
-import MenuSection from "./MenuSection";
-import Navbar from "./Navbar";
+import Carousel from "../Components/LandingPage/Carousel";
+import Footer from "../Components/LandingPage/Footer";
+import MenuSection from "../Components/LandingPage/MenuSection";
+import Navbar from "../Components/LandingPage/Navbar";
 
 function LandingPage() {
   const { hash } = useLocation();

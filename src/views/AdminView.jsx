@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import CreateFood from "./food/CreateFood";
-import DeleteFood from "./food/DeleteFood";
-import UpdateFood from "./food/UpdateFood";
-import CreateRider from "./riders/CreateRider";
-import DeleteRider from "./riders/DeleteRider";
-import UpdateRider from "./riders/UpdateRider";
-import Navigation from "./navigation";
-import foodController from "../../controllers/foodController";
-import riderController from "../../controllers/riderController";
+import CreateFood from "../Components/AdminDashboard/food/CreateFood";
+import DeleteFood from "../Components/AdminDashboard/food/DeleteFood";
+import UpdateFood from "../Components/AdminDashboard/food/UpdateFood";
+import CreateRider from "../Components/AdminDashboard/riders/CreateRider";
+import DeleteRider from "../Components/AdminDashboard/riders/DeleteRider";
+import UpdateRider from "../Components/AdminDashboard/riders/UpdateRider";
+import Navigation from "../Components/AdminDashboard/navigation";
+import foodController from "../controllers/foodController";
+import riderController from "../controllers/riderController";
 
 const forms = {
   createFood: CreateFood,
@@ -57,7 +57,7 @@ const sampleRecords = {
   },
 };
 
-function AdminMain() {
+function AdminView() {
   const [activeForm, setActiveForm] = useState(null);
   const [viewAllFilter, setViewAllFilter] = useState("");
   const [records, setRecords] = useState([]);
@@ -239,4 +239,4 @@ function AdminMain() {
   );
 }
 
-export default AdminMain;
+export default AdminView;
