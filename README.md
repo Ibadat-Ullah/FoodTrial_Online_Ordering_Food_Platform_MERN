@@ -20,4 +20,7 @@
 Vite proxies `/api` requests to `http://localhost:5000`. Register and log in
 through the app; passwords are hashed in the backend, and JWTs protect the
 admin screen and Food/Rider write endpoints. Public food listing stays available.
-Do not commit `.env` or share your JWT secret.
+Food images can be uploaded as JPEG, PNG, or WebP files up to 5 MB and are
+stored in `FoodTrial\BackEnd\uploads`. Food prices are entered and displayed in
+PKR. Keep the uploads folder persistent in production. Do not commit `.env` or
+share your JWT secret.

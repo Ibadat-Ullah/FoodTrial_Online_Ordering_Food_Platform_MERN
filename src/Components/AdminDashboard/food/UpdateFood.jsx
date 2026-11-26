@@ -5,16 +5,27 @@ import { z } from "zod";
 import foodController from "../../../controllers/foodController";
 
 const optionalText = z.string().trim().min(2, "Use at least 2 characters.").max(80, "Value is too long.").or(z.literal(""));
+const optionalImage = z.custom(
+  (files) =>
+    !files?.length ||
+    (typeof FileList !== "undefined" &&
+      files instanceof FileList &&
+      files.length === 1 &&
+      ["image/jpeg", "image/png", "image/webp"].includes(files[0].type) &&
+      files[0].size <= 5 * 1024 * 1024),
+  "Choose a JPEG, PNG, or WebP image up to 5 MB.",
+);
 const schema = z.object({
   foodId: z.string().trim().min(1, "Enter a food ID.").max(64, "Food ID is too long."),
   name: optionalText,
   category: z.string().trim().min(2, "Use at least 2 characters.").max(40, "Category is too long.").or(z.literal("")),
   description: z.string().trim().min(10, "Use at least 10 characters.").max(500, "Description is too long.").or(z.literal("")),
   price: z.union([z.literal(""), z.coerce.number().finite().positive("Price must be greater than zero.").max(100000, "Price is too high.")]),
-  image: z.union([z.literal(""), z.string().trim().url("Enter a valid image URL.").max(2048, "Image URL is too long.")]),
+  image: optionalImage,
 }).refine(
   ({ name, category, description, price, image }) =>
-    [name, category, description, price, image].some((value) => value !== ""),
+    [name, category, description, price].some((value) => value !== "") ||
+    Boolean(image?.length),
   { path: ["name"], message: "Enter at least one field to update." },
 );
 
@@ -22,14 +33,15 @@ function UpdateFood() {
   const [message, setMessage] = useState("");
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", category: "", description: "", price: "", image: "" },
+    defaultValues: { name: "", category: "", description: "", price: "" },
   });
 
-  const onSubmit = async ({ foodId, ...fields }) => {
+  const onSubmit = async ({ foodId, image, ...fields }) => {
     setMessage("");
     const values = Object.fromEntries(
       Object.entries(fields).filter(([, value]) => value !== ""),
     );
+    if (image?.length) values.image = image;
     try {
       await foodController.update(foodId, values);
       reset();
@@ -77,7 +89,7 @@ function UpdateFood() {
         {errors.description && <p className="text-sm text-red-600">{errors.description.message}</p>}
       </label>
       <label className="block">
-        Price
+        Price (PKR)
         <input
           type="number"
           step="0.01"
@@ -87,9 +99,10 @@ function UpdateFood() {
         {errors.price && <p className="text-sm text-red-600">{errors.price.message}</p>}
       </label>
       <label className="block">
-        Image URL
+        Replace food image (optional)
         <input
-          type="url"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
           {...register("image")}
           className="mt-1 w-full rounded-md border p-2"
         />

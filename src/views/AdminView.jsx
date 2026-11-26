@@ -38,22 +38,22 @@ const sampleRecords = {
   Food: {
     columns: ["ID", "Name", "Category", "Price"],
     rows: [
-      ["F001", "Garden Salad", "Salad", "$8.99"],
-      ["F002", "Margherita Pizza", "Main course", "$12.99"],
+      ["F001", "Garden Salad", "Salad", "PKR 8.99"],
+      ["F002", "Margherita Pizza", "Main course", "PKR 12.99"],
     ],
   },
   Payment: {
     columns: ["ID", "Order ID", "Method", "Amount", "Status"],
     rows: [
-      ["P001", "O001", "Card", "$21.98", "Paid"],
-      ["P002", "O002", "Cash", "$10.99", "Pending"],
+      ["P001", "O001", "Card", "PKR 21.98", "Paid"],
+      ["P002", "O002", "Cash", "PKR 10.99", "Pending"],
     ],
   },
   Orders: {
     columns: ["ID", "Customer", "Items", "Total", "Status"],
     rows: [
-      ["O001", "Alex Morgan", "Garden Salad, Juice", "$21.98", "Preparing"],
-      ["O002", "Jamie Lee", "Chicken Tacos", "$10.99", "Delivered"],
+      ["O001", "Alex Morgan", "Garden Salad, Juice", "PKR 21.98", "Preparing"],
+      ["O002", "Jamie Lee", "Chicken Tacos", "PKR 10.99", "Delivered"],
     ],
   },
 };
@@ -183,7 +183,12 @@ function AdminView() {
                               ? ["ID", "Name", "Category", "Price"]
                               : ["ID", "Name", "Email", "Phone", "Vehicle", "Status"]
                             ).map((column) => (
-                              <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">{column}</th>
+                              <th
+                                key={column}
+                                className="whitespace-nowrap px-4 py-3 font-semibold"
+                              >
+                                {column === "Price" ? "Price (PKR)" : column}
+                              </th>
                             ))}
                           </tr>
                         </thead>
@@ -195,7 +200,7 @@ function AdminView() {
                               {viewAllFilter === "Food" ? (
                                 <>
                                   <td className="whitespace-nowrap px-4 py-3">{record.category}</td>
-                                  <td className="whitespace-nowrap px-4 py-3">${record.price.toFixed(2)}</td>
+                                  <td className="whitespace-nowrap px-4 py-3">PKR {record.price.toFixed(2)}</td>
                                 </>
                               ) : (
                                 <>

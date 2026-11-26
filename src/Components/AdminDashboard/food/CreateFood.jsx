@@ -4,12 +4,22 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import foodController from "../../../controllers/foodController";
 
+const imageFile = z.custom(
+  (files) =>
+    typeof FileList !== "undefined" &&
+    files instanceof FileList &&
+    files.length === 1 &&
+    ["image/jpeg", "image/png", "image/webp"].includes(files[0].type) &&
+    files[0].size <= 5 * 1024 * 1024,
+  "Choose a JPEG, PNG, or WebP image up to 5 MB.",
+);
+
 const schema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters.").max(80, "Name is too long."),
   category: z.string().trim().min(2, "Category must be at least 2 characters.").max(40, "Category is too long."),
   description: z.string().trim().min(10, "Description must be at least 10 characters.").max(500, "Description is too long."),
   price: z.coerce.number().finite().positive("Price must be greater than zero.").max(100000, "Price is too high."),
-  image: z.string().trim().url("Enter a valid image URL.").max(2048, "Image URL is too long."),
+  image: imageFile,
 });
 
 function CreateFood() {
@@ -62,7 +72,7 @@ function CreateFood() {
         {errors.description && <p className="text-sm text-red-600">{errors.description.message}</p>}
       </label>
       <label className="block">
-        Price
+        Price (PKR)
         <input
           type="number"
           step="0.01"
@@ -72,9 +82,10 @@ function CreateFood() {
         {errors.price && <p className="text-sm text-red-600">{errors.price.message}</p>}
       </label>
       <label className="block">
-        Image URL
+        Food image
         <input
-          type="url"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
           {...register("image")}
           className="mt-1 w-full rounded-md border p-2"
         />
