@@ -11,8 +11,8 @@ const imageFile = z.custom(
     files instanceof FileList &&
     files.length === 1 &&
     ["image/jpeg", "image/png", "image/webp"].includes(files[0].type) &&
-    files[0].size <= 5 * 1024 * 1024,
-  "Choose a JPEG, PNG, or WebP image up to 5 MB.",
+    files[0].size <= 4 * 1024 * 1024,
+  "Choose a JPEG, PNG, or WebP image up to 4 MB.",
 );
 
 const schema = z.object({
