@@ -6,6 +6,8 @@ import UpdateFood from "../Components/AdminDashboard/food/UpdateFood";
 import CreateRider from "../Components/AdminDashboard/riders/CreateRider";
 import DeleteRider from "../Components/AdminDashboard/riders/DeleteRider";
 import UpdateRider from "../Components/AdminDashboard/riders/UpdateRider";
+import OrdersPanel from "../Components/AdminDashboard/OrdersPanel";
+import UsersPanel from "../Components/AdminDashboard/UsersPanel";
 import Navigation from "../Components/AdminDashboard/navigation";
 import foodController from "../controllers/foodController";
 import riderController from "../controllers/riderController";
@@ -18,44 +20,6 @@ const forms = {
   createRider: CreateRider,
   updateRider: UpdateRider,
   deleteRider: DeleteRider,
-};
-
-const sampleRecords = {
-  Users: {
-    columns: ["ID", "Name", "Email", "Role"],
-    rows: [
-      ["U001", "Alex Morgan", "alex@example.com", "Customer"],
-      ["U002", "Jamie Lee", "jamie@example.com", "Customer"],
-    ],
-  },
-  Riders: {
-    columns: ["ID", "Name", "Phone", "Status"],
-    rows: [
-      ["R001", "Sam Taylor", "555-0101", "Active"],
-      ["R002", "Riley Jordan", "555-0102", "Inactive"],
-    ],
-  },
-  Food: {
-    columns: ["ID", "Name", "Category", "Price"],
-    rows: [
-      ["F001", "Garden Salad", "Salad", "PKR 8.99"],
-      ["F002", "Margherita Pizza", "Main course", "PKR 12.99"],
-    ],
-  },
-  Payment: {
-    columns: ["ID", "Order ID", "Method", "Amount", "Status"],
-    rows: [
-      ["P001", "O001", "Card", "PKR 21.98", "Paid"],
-      ["P002", "O002", "Cash", "PKR 10.99", "Pending"],
-    ],
-  },
-  Orders: {
-    columns: ["ID", "Customer", "Items", "Total", "Status"],
-    rows: [
-      ["O001", "Alex Morgan", "Garden Salad, Juice", "PKR 21.98", "Preparing"],
-      ["O002", "Jamie Lee", "Chicken Tacos", "PKR 10.99", "Delivered"],
-    ],
-  },
 };
 
 function AdminView() {
@@ -125,12 +89,16 @@ function AdminView() {
         </div>
       </header>
 
-      <div className="flex min-h-[calc(100vh-73px)]">
+      <div className="flex min-h-[calc(100vh-73px)] flex-col lg:flex-row">
         <Navigation
           activeForm={activeForm}
           onSelect={(form) => {
             setActiveForm(form);
-            if (form === "viewAll" && ["Food", "Riders"].includes(viewAllFilter)) {
+            if (
+              form === "viewAll" &&
+              activeForm !== "viewAll" &&
+              ["Food", "Riders"].includes(viewAllFilter)
+            ) {
               setRecords([]);
               setRecordsError("");
               setRecordsLoading(true);
@@ -142,7 +110,7 @@ function AdminView() {
             <>
               <div className="flex justify-end">
                 <select
-                  aria-label="Filter records"
+                  aria-label="View all category"
                   value={viewAllFilter}
                   onChange={(event) => {
                     const category = event.target.value;
@@ -154,89 +122,93 @@ function AdminView() {
                   className="w-52 rounded-md border border-orange-600 bg-white px-3 py-2 text-gray-700"
                 >
                   <option value="">Choose a category</option>
-                  {Object.keys(sampleRecords).map((category) => (
+                  {["Food", "Riders", "Orders", "Users"].map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>
                   ))}
                 </select>
               </div>
-              {viewAllFilter && (
+              {viewAllFilter === "Orders" ? (
+                <div className="mt-6">
+                  <OrdersPanel />
+                </div>
+              ) : viewAllFilter === "Users" ? (
+                <div className="mt-6">
+                  <UsersPanel />
+                </div>
+              ) : ["Food", "Riders"].includes(viewAllFilter) ? (
                 <div className="mt-6 overflow-x-auto rounded-lg bg-white shadow-sm">
                   <p className="px-4 pt-4 text-sm text-gray-500">
-                    {["Food", "Riders"].includes(viewAllFilter)
-                      ? "Records from MongoDB"
-                      : "Sample data for layout preview"}
+                    Records from MongoDB
                   </p>
-                  {["Food", "Riders"].includes(viewAllFilter) ? (
-                    recordsLoading ? (
-                      <p className="px-4 py-6 text-sm text-gray-600">Loading records...</p>
-                    ) : recordsError ? (
-                      <p role="alert" className="px-4 py-6 text-sm text-red-600">{recordsError}</p>
-                    ) : records.length === 0 ? (
-                      <p className="px-4 py-6 text-sm text-gray-600">No records found.</p>
-                    ) : (
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-orange-50 text-gray-700">
-                          <tr>
-                            {(viewAllFilter === "Food"
-                              ? ["ID", "Name", "Category", "Price"]
-                              : ["ID", "Name", "Email", "Phone", "Vehicle", "Status"]
-                            ).map((column) => (
-                              <th
-                                key={column}
-                                className="whitespace-nowrap px-4 py-3 font-semibold"
-                              >
-                                {column === "Price" ? "Price (PKR)" : column}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {records.map((record) => (
-                            <tr key={record._id} className="text-gray-700">
-                              <td className="whitespace-nowrap px-4 py-3">{record._id}</td>
-                              <td className="whitespace-nowrap px-4 py-3">{record.name}</td>
-                              {viewAllFilter === "Food" ? (
-                                <>
-                                  <td className="whitespace-nowrap px-4 py-3">{record.category}</td>
-                                  <td className="whitespace-nowrap px-4 py-3">PKR {record.price.toFixed(2)}</td>
-                                </>
-                              ) : (
-                                <>
-                                  <td className="whitespace-nowrap px-4 py-3">{record.email}</td>
-                                  <td className="whitespace-nowrap px-4 py-3">{record.phone}</td>
-                                  <td className="whitespace-nowrap px-4 py-3">{record.vehicleType}</td>
-                                  <td className="whitespace-nowrap px-4 py-3">{record.status}</td>
-                                </>
-                              )}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )
+                  {recordsLoading ? (
+                    <p className="px-4 py-6 text-sm text-gray-600">Loading records...</p>
+                  ) : recordsError ? (
+                    <p role="alert" className="px-4 py-6 text-sm text-red-600">{recordsError}</p>
+                  ) : records.length === 0 ? (
+                    <p className="px-4 py-6 text-sm text-gray-600">No records found.</p>
                   ) : (
                     <table className="w-full text-left text-sm">
                       <thead className="bg-orange-50 text-gray-700">
                         <tr>
-                          {sampleRecords[viewAllFilter].columns.map((column) => (
-                            <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">{column}</th>
+                          {(viewAllFilter === "Food"
+                            ? ["ID", "Name", "Category", "Price", "Availability", "Prep time", "Portion"]
+                            : ["ID", "Name", "Email", "Phone", "Delivery zone", "Vehicle", "Status"]
+                          ).map((column) => (
+                            <th
+                              key={column}
+                              className="whitespace-nowrap px-4 py-3 font-semibold"
+                            >
+                              {column === "Price" ? "Price (PKR)" : column}
+                            </th>
                           ))}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
-                        {sampleRecords[viewAllFilter].rows.map((row) => (
-                          <tr key={row[0]} className="text-gray-700">
-                            {row.map((value, index) => (
-                              <td key={`${row[0]}-${index}`} className="whitespace-nowrap px-4 py-3">{value}</td>
-                            ))}
+                        {records.map((record) => (
+                          <tr key={record._id} className="text-gray-700">
+                            <td className="whitespace-nowrap px-4 py-3">{record._id}</td>
+                            <td className="whitespace-nowrap px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                {viewAllFilter === "Riders" && record.profileImage && (
+                                  <img
+                                    src={record.profileImage}
+                                    alt=""
+                                    className="h-9 w-9 rounded-full object-cover"
+                                  />
+                                )}
+                                {record.name}
+                              </div>
+                            </td>
+                            {viewAllFilter === "Food" ? (
+                              <>
+                                <td className="whitespace-nowrap px-4 py-3">{record.category}</td>
+                                <td className="whitespace-nowrap px-4 py-3">PKR {record.price.toFixed(2)}</td>
+                                <td className="whitespace-nowrap px-4 py-3">
+                                  {record.isAvailable === false ? "Unavailable" : "Available"}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-3">
+                                  {record.preparationTime ? `${record.preparationTime} min` : "-"}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-3">{record.portionSize || "-"}</td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="whitespace-nowrap px-4 py-3">{record.email}</td>
+                                <td className="whitespace-nowrap px-4 py-3">{record.phone}</td>
+                                <td className="whitespace-nowrap px-4 py-3">{record.deliveryZone || "-"}</td>
+                                <td className="whitespace-nowrap px-4 py-3">{record.vehicleType}</td>
+                                <td className="whitespace-nowrap px-4 py-3">{record.status}</td>
+                              </>
+                            )}
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   )}
                 </div>
-              )}
+              ) : null}
             </>
           ) : ActiveForm ? (
             <ActiveForm />

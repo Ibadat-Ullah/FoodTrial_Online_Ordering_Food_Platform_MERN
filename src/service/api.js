@@ -17,8 +17,10 @@ api.interceptors.response.use(
   (error) => {
     const isAuthRequest = /\/auth\/(login|register)$/.test(error.config?.url || "");
     if (error.response?.status === 401 && !isAuthRequest) {
-      localStorage.removeItem(sessionKey);
-      window.dispatchEvent(new Event("foodtrial:logout"));
+      if (localStorage.getItem(sessionKey)) {
+        localStorage.removeItem(sessionKey);
+        window.dispatchEvent(new Event("foodtrial:logout"));
+      }
     }
     return Promise.reject(error);
   },

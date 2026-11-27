@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "../context/useAuth";
 import { apiError } from "../service/api";
@@ -10,6 +10,7 @@ const schema = z.object({
   email: z.string().trim().email("Enter a valid email.").max(254, "Email is too long."),
   password: z.string().min(8, "Password must be at least 8 characters.").max(72, "Password must be at most 72 characters."),
   confirmPassword: z.string().min(8, "Confirm your password."),
+  adminSetupKey: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   path: ["confirmPassword"],
   message: "Passwords do not match.",
@@ -17,6 +18,7 @@ const schema = z.object({
 
 function RegistrationView() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signUp } = useAuth();
   const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
@@ -26,8 +28,14 @@ function RegistrationView() {
     const credentials = { ...values };
     delete credentials.confirmPassword;
     try {
-      await signUp(credentials);
-      navigate("/admin");
+      const session = await signUp(credentials);
+      const returnPath = location.state?.from?.pathname;
+      const destination = session.user.role === "admin"
+        ? "/admin"
+        : returnPath && returnPath !== "/admin"
+          ? returnPath
+          : "/";
+      navigate(destination, { replace: true });
     } catch (error) {
       setError("root", { message: apiError(error) });
     }
@@ -73,6 +81,16 @@ function RegistrationView() {
             />
             {errors.confirmPassword && <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>}
           </label>
+          <label className="block">
+            Admin setup key (optional)
+            <input
+              type="password"
+              autoComplete="off"
+              {...register("adminSetupKey")}
+              className="mt-1 w-full rounded border p-2"
+            />
+            {errors.adminSetupKey && <p className="text-sm text-red-600">{errors.adminSetupKey.message}</p>}
+          </label>
           {errors.root && <p role="alert" className="text-sm text-red-600">{errors.root.message}</p>}
           <button disabled={isSubmitting} type="submit" className="w-full rounded bg-orange-600 p-2 font-semibold text-white hover:bg-orange-700 disabled:opacity-50">
             {isSubmitting ? "Creating account..." : "Register"}
@@ -86,6 +104,7 @@ function RegistrationView() {
         </Link>
         <Link
           to="/login"
+          state={location.state}
           className="inline-block rounded border border-orange-600 px-4 py-2 text-orange-600 hover:bg-orange-50"
         >
           Already have an account? Login

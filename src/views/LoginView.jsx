@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "../context/useAuth";
 import { apiError } from "../service/api";
@@ -12,6 +12,7 @@ const schema = z.object({
 
 function LoginView() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn } = useAuth();
   const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
@@ -19,8 +20,14 @@ function LoginView() {
 
   const onSubmit = async (values) => {
     try {
-      await signIn(values);
-      navigate("/admin");
+      const session = await signIn(values);
+      const returnPath = location.state?.from?.pathname;
+      const destination = session.user.role === "admin"
+        ? "/admin"
+        : returnPath && returnPath !== "/admin"
+          ? returnPath
+          : "/";
+      navigate(destination, { replace: true });
     } catch (error) {
       setError("root", { message: apiError(error) });
     }
@@ -65,6 +72,7 @@ function LoginView() {
         </Link>
         <Link
           to="/register"
+          state={location.state}
           className="inline-block rounded border border-orange-600 px-4 py-2 text-orange-600 hover:bg-orange-50"
         >
           Create an account

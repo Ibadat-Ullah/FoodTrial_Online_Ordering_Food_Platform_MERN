@@ -4,20 +4,34 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import riderController from "../../../controllers/riderController";
 
+const profileImage = z.custom(
+  (files) =>
+    !files?.length ||
+    (typeof FileList !== "undefined" &&
+      files instanceof FileList &&
+      files.length === 1 &&
+      ["image/jpeg", "image/png", "image/webp"].includes(files[0].type) &&
+      files[0].size <= 5 * 1024 * 1024),
+  "Choose a JPEG, PNG, or WebP image up to 5 MB.",
+);
+
 const schema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters.").max(60, "Name is too long."),
   email: z.string().trim().email("Enter a valid email.").max(254, "Email is too long."),
   phone: z.string().trim().regex(/^(?=.*\d)\+?[0-9()\-\s]{7,20}$/, "Enter a valid phone number."),
+  deliveryZone: z.string().trim().max(100, "Delivery zone is too long."),
   vehicleType: z.enum(["bicycle", "motorcycle", "car"], {
     error: "Select a vehicle type.",
   }),
   vehicleRegistration: z.string().trim().min(3, "Registration must be at least 3 characters.").max(15, "Registration is too long.").regex(/^[A-Za-z0-9][A-Za-z0-9 -]*$/, "Use letters, numbers, spaces, or hyphens."),
+  profileImage,
 });
 
 function CreateRider() {
   const [message, setMessage] = useState("");
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
+    defaultValues: { deliveryZone: "" },
   });
 
   const onSubmit = async (values) => {
@@ -65,6 +79,15 @@ function CreateRider() {
         {errors.phone && <p className="text-sm text-red-600">{errors.phone.message}</p>}
       </label>
       <label className="block">
+        Delivery zone (optional)
+        <input
+          {...register("deliveryZone")}
+          placeholder="e.g. Gulberg"
+          className="mt-1 w-full rounded-md border p-2"
+        />
+        {errors.deliveryZone && <p className="text-sm text-red-600">{errors.deliveryZone.message}</p>}
+      </label>
+      <label className="block">
         Vehicle type
         <select
           {...register("vehicleType")}
@@ -87,6 +110,16 @@ function CreateRider() {
           className="mt-1 w-full rounded-md border p-2"
         />
         {errors.vehicleRegistration && <p className="text-sm text-red-600">{errors.vehicleRegistration.message}</p>}
+      </label>
+      <label className="block">
+        Rider profile photo (optional)
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          {...register("profileImage")}
+          className="mt-1 w-full rounded-md border p-2"
+        />
+        {errors.profileImage && <p className="text-sm text-red-600">{errors.profileImage.message}</p>}
       </label>
       <button disabled={isSubmitting} className="rounded-md bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50">
         {isSubmitting ? "Saving..." : "Create rider"}

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import foodController from "../../../controllers/foodController";
+import { isValidPricedOptionInput } from "../../../utils/addOnInput";
 
 const imageFile = z.custom(
   (files) =>
@@ -20,12 +21,39 @@ const schema = z.object({
   description: z.string().trim().min(10, "Description must be at least 10 characters.").max(500, "Description is too long."),
   price: z.coerce.number().finite().positive("Price must be greater than zero.").max(100000, "Price is too high."),
   image: imageFile,
+  isAvailable: z.boolean(),
+  preparationTime: z.union([
+    z.literal(""),
+    z.coerce.number().int().min(1, "Use at least 1 minute.").max(240, "Preparation time cannot exceed 240 minutes."),
+  ]),
+  portionSize: z.string().trim().max(60, "Portion size is too long."),
+  ingredients: z.string().max(500, "Ingredients are too long."),
+  allergens: z.string().max(500, "Allergen notes are too long."),
+  toppings: z.string().max(500, "Toppings are too long."),
+  toppingOptions: z.string().max(1200, "Topping options are too long.").refine(
+    isValidPricedOptionInput,
+    "Use one `Name: price` option per line (up to 20).",
+  ),
+  addOns: z.string().max(1200, "Add-on options are too long.").refine(
+    isValidPricedOptionInput,
+    "Use one `Name: price` option per line (up to 20).",
+  ),
 });
 
 function CreateFood() {
   const [message, setMessage] = useState("");
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
+    defaultValues: {
+      isAvailable: true,
+      preparationTime: "",
+      portionSize: "",
+      ingredients: "",
+      allergens: "",
+      toppings: "",
+      toppingOptions: "",
+      addOns: "",
+    },
   });
 
   const onSubmit = async (values) => {
@@ -90,6 +118,72 @@ function CreateFood() {
           className="mt-1 w-full rounded-md border p-2"
         />
         {errors.image && <p className="text-sm text-red-600">{errors.image.message}</p>}
+      </label>
+      <label className="flex items-center gap-2">
+        <input type="checkbox" {...register("isAvailable")} className="h-4 w-4" />
+        Available for ordering
+      </label>
+      <label className="block">
+        Preparation time (minutes, optional)
+        <input
+          type="number"
+          min="1"
+          max="240"
+          {...register("preparationTime")}
+          className="mt-1 w-full rounded-md border p-2"
+        />
+        {errors.preparationTime && <p className="text-sm text-red-600">{errors.preparationTime.message}</p>}
+      </label>
+      <label className="block">
+        Portion size (optional)
+        <input
+          {...register("portionSize")}
+          placeholder="e.g. Regular, 12-inch"
+          className="mt-1 w-full rounded-md border p-2"
+        />
+        {errors.portionSize && <p className="text-sm text-red-600">{errors.portionSize.message}</p>}
+      </label>
+      <p className="text-sm text-gray-500">The following lists are optional; separate entries with commas.</p>
+      <label className="block">
+        Ingredients (optional)
+        <textarea {...register("ingredients")} rows="2" className="mt-1 w-full rounded-md border p-2" />
+        {errors.ingredients && <p className="text-sm text-red-600">{errors.ingredients.message}</p>}
+      </label>
+      <label className="block">
+        Allergens (optional)
+        <textarea {...register("allergens")} rows="2" className="mt-1 w-full rounded-md border p-2" />
+        {errors.allergens && <p className="text-sm text-red-600">{errors.allergens.message}</p>}
+      </label>
+      <label className="block">
+        Descriptive toppings (optional)
+        <textarea {...register("toppings")} rows="2" className="mt-1 w-full rounded-md border p-2" />
+        {errors.toppings && <p className="text-sm text-red-600">{errors.toppings.message}</p>}
+      </label>
+      <label className="block">
+        Selectable toppings (optional)
+        <textarea
+          {...register("toppingOptions")}
+          rows="3"
+          placeholder={"Extra cheese: 150\nJalapeños: 80"}
+          className="mt-1 w-full rounded-md border p-2"
+        />
+        <span className="text-xs text-gray-500">
+          Customers can select these toppings. Enter one per line as Name: price in PKR.
+        </span>
+        {errors.toppingOptions && <p className="text-sm text-red-600">{errors.toppingOptions.message}</p>}
+      </label>
+      <label className="block">
+        Other optional add-ons (optional)
+        <textarea
+          {...register("addOns")}
+          rows="3"
+          placeholder={"Extra cheese: 150\nJalapeños: 80"}
+          className="mt-1 w-full rounded-md border p-2"
+        />
+        <span className="text-xs text-gray-500">
+          Customers can select these just like toppings. One per line as Name: price in PKR.
+        </span>
+        {errors.addOns && <p className="text-sm text-red-600">{errors.addOns.message}</p>}
       </label>
       <button disabled={isSubmitting} className="rounded-md bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50">
         {isSubmitting ? "Saving..." : "Create food"}

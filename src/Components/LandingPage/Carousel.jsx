@@ -33,7 +33,7 @@ function Carousel() {
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setActiveIndex((currentIndex) =>
-        Math.min(currentIndex + 1, images.length - 1),
+        (currentIndex + 1) % images.length,
       );
     }, 5000);
 
@@ -41,13 +41,13 @@ function Carousel() {
   }, []);
 
   const showPrevious = () => {
-    setActiveIndex((currentIndex) => Math.max(currentIndex - 1, 0));
+    setActiveIndex((currentIndex) =>
+      (currentIndex - 1 + images.length) % images.length,
+    );
   };
 
   const showNext = () => {
-    setActiveIndex((currentIndex) =>
-      Math.min(currentIndex + 1, images.length - 1),
-    );
+    setActiveIndex((currentIndex) => (currentIndex + 1) % images.length);
   };
 
   return (
@@ -70,7 +70,6 @@ function Carousel() {
         type="button"
         onClick={showPrevious}
         aria-label="Previous image"
-        disabled={activeIndex === 0}
         className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-4 py-2 text-2xl text-white hover:bg-black/70"
       >
         &#8249;
@@ -79,7 +78,6 @@ function Carousel() {
         type="button"
         onClick={showNext}
         aria-label="Next image"
-        disabled={activeIndex === images.length - 1}
         className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-4 py-2 text-2xl text-white hover:bg-black/70"
       >
         &#8250;

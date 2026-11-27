@@ -35,7 +35,7 @@ function Navigation({ activeForm, onSelect }) {
   };
 
   return (
-    <aside className="w-60 shrink-0 border-r border-gray-200 bg-white p-4">
+    <aside className="w-full shrink-0 border-b border-gray-200 bg-white p-4 lg:w-60 lg:border-b-0 lg:border-r">
       <nav aria-label="Admin dashboard navigation" className="space-y-2">
         <button
           type="button"

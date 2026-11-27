@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import foodController from "../../controllers/foodController";
+import { useCart } from "../../context/useCart";
 
 const menuItems = [
   {
@@ -89,9 +90,13 @@ const menuItems = [
 ];
 
 function MenuSection() {
+  const { addItem } = useCart();
   const [showAll, setShowAll] = useState(false);
   const [items, setItems] = useState(menuItems);
   const [loadError, setLoadError] = useState("");
+  const [selectedOptions, setSelectedOptions] = useState({});
+  const [selectedItem, setSelectedItem] = useState(null);
+  const dialogRef = useRef(null);
 
   useEffect(() => {
     foodController
@@ -102,67 +107,260 @@ function MenuSection() {
       });
   }, []);
 
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (selectedItem && !dialog.open) dialog.showModal();
+    if (!selectedItem && dialog.open) dialog.close();
+  }, [selectedItem]);
+
   const visibleItems = showAll ? items : items.slice(0, 6);
+  const selectedItemKey = selectedItem?._id || selectedItem?.name;
+  const selection = selectedOptions[selectedItemKey] || {
+    toppingOptions: [],
+    addOns: [],
+  };
+  const optionGroups = selectedItem
+    ? [
+        {
+          key: "toppingOptions",
+          label: "Toppings",
+          options: selectedItem.toppingOptions || [],
+        },
+        {
+          key: "addOns",
+          label: "Other optional add-ons",
+          options: selectedItem.addOns || [],
+        },
+      ].filter((group) => group.options.length > 0)
+    : [];
+  const selectedToppings = (selectedItem?.toppingOptions || []).filter((option) =>
+    selection.toppingOptions.includes(String(option._id)),
+  );
+  const selectedAddOns = (selectedItem?.addOns || []).filter((option) =>
+    selection.addOns.includes(String(option._id)),
+  );
+  const selectedPrice = [...selectedToppings, ...selectedAddOns]
+    .reduce((sum, option) => sum + option.price, 0);
+
+  const toggleOption = (groupKey, optionId) =>
+    setSelectedOptions((current) => {
+      const currentSelection = current[selectedItemKey] || {
+        toppingOptions: [],
+        addOns: [],
+      };
+      const selectedIds = currentSelection[groupKey];
+      return {
+        ...current,
+        [selectedItemKey]: {
+          ...currentSelection,
+          [groupKey]: selectedIds.includes(optionId)
+            ? selectedIds.filter((id) => id !== optionId)
+            : [...selectedIds, optionId],
+        },
+      };
+    });
+
+  const addSelectedItemToCart = () => {
+    if (!selectedItem?._id || selectedItem.isAvailable === false) return;
+    addItem({
+      id: selectedItem._id,
+      name: selectedItem.name,
+      image: selectedItem.image,
+      basePrice: selectedItem.price,
+      toppingOptions: selectedToppings.map((option) => ({
+        id: String(option._id),
+        name: option.name,
+        price: option.price,
+      })),
+      addOns: selectedAddOns.map((option) => ({
+        id: String(option._id),
+        name: option.name,
+        price: option.price,
+      })),
+    });
+    setSelectedOptions((current) => ({
+      ...current,
+      [selectedItemKey]: { toppingOptions: [], addOns: [] },
+    }));
+    setSelectedItem(null);
+  };
 
   return (
-    <section id="menu" className="scroll-mt-20 px-6 py-16 sm:px-10 lg:px-16">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Our Menu</h2>
-          <p className="mt-2 text-gray-600">Fresh favorites made for you.</p>
+    <>
+      <section id="menu" className="scroll-mt-20 px-6 py-16 sm:px-10 lg:px-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-bold text-gray-900">Our Menu</h2>
+            <p className="mt-2 text-gray-600">Fresh favorites made for you.</p>
+          </div>
+
+          {loadError && (
+            <p role="alert" className="mb-4 text-center text-sm text-red-600">
+              {loadError} Showing sample menu items.
+            </p>
+          )}
+          {items.length === 0 && !loadError && (
+            <p className="mb-4 text-center text-gray-600">
+              No food items are available yet.
+            </p>
+          )}
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {visibleItems.map((item) => (
+              <article
+                key={item._id || item.name}
+                className="overflow-hidden rounded-xl bg-white shadow-md transition-shadow hover:shadow-lg"
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedItem(item)}
+                  aria-haspopup="dialog"
+                  className="block w-full cursor-pointer text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                >
+                  <img
+                    src={item.image}
+                    alt=""
+                    className="h-48 w-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                      <span className="shrink-0 font-semibold text-orange-600">
+                        {typeof item.price === "number"
+                          ? `PKR ${item.price.toFixed(2)}`
+                          : item.price}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-gray-600">{item.description}</p>
+                  </div>
+                </button>
+              </article>
+            ))}
+          </div>
+
+          {items.length > 6 && (
+            <div className="mt-8 text-center">
+              <button
+                type="button"
+                onClick={() => setShowAll((currentValue) => !currentValue)}
+                className="rounded-lg bg-orange-600 px-6 py-3 font-medium text-white hover:bg-orange-700"
+              >
+                {showAll ? "Show less" : "Show more"}
+              </button>
+            </div>
+          )}
         </div>
+      </section>
 
-        {loadError && (
-          <p role="alert" className="mb-4 text-center text-sm text-red-600">
-            {loadError} Showing sample menu items.
-          </p>
-        )}
-        {items.length === 0 && !loadError && (
-          <p className="mb-4 text-center text-gray-600">
-            No food items are available yet.
-          </p>
-        )}
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleItems.map((item) => (
-            <article
-              key={item.name}
-              className="overflow-hidden rounded-xl bg-white shadow-md transition-shadow hover:shadow-lg"
-            >
-              <img
-                src={item.image}
-                alt={item.name}
-                className="h-48 w-full object-cover"
-                loading="lazy"
-              />
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                  <span className="shrink-0 font-semibold text-orange-600">
-                    {typeof item.price === "number"
-                      ? `PKR ${item.price.toFixed(2)}`
-                      : item.price}
-                  </span>
+      <dialog
+        ref={dialogRef}
+        aria-labelledby="food-detail-title"
+        onCancel={(event) => {
+          event.preventDefault();
+          setSelectedItem(null);
+        }}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) setSelectedItem(null);
+        }}
+        className="fixed m-auto max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-xl p-0 shadow-2xl backdrop:bg-black/60"
+      >
+        {selectedItem && (
+          <div>
+            <img
+              src={selectedItem.image}
+              alt={selectedItem.name}
+              className="h-56 w-full object-cover"
+            />
+            <div className="space-y-4 p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 id="food-detail-title" className="text-2xl font-bold text-gray-900">
+                    {selectedItem.name}
+                  </h2>
+                  <p className="mt-2 text-gray-600">{selectedItem.description}</p>
                 </div>
-                <p className="mt-2 text-sm text-gray-600">{item.description}</p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedItem(null)}
+                  aria-label="Close food details"
+                  className="rounded-full px-3 py-1 text-2xl text-gray-500 hover:bg-gray-100"
+                >
+                  ×
+                </button>
               </div>
-            </article>
-          ))}
-        </div>
 
-        {items.length > 6 && (
-          <div className="mt-8 text-center">
-            <button
-              type="button"
-              onClick={() => setShowAll((currentValue) => !currentValue)}
-              className="rounded-lg bg-orange-600 px-6 py-3 font-medium text-white hover:bg-orange-700"
-            >
-              {showAll ? "Show less" : "Show more"}
-            </button>
+              {selectedItem.portionSize && (
+                <p className="text-sm text-gray-600">Portion: {selectedItem.portionSize}</p>
+              )}
+              {selectedItem.preparationTime && (
+                <p className="text-sm text-gray-600">
+                  Preparation: about {selectedItem.preparationTime} minutes
+                </p>
+              )}
+              {selectedItem.ingredients?.length > 0 && (
+                <p className="text-sm text-gray-600">
+                  Ingredients: {selectedItem.ingredients.join(", ")}
+                </p>
+              )}
+              {selectedItem.allergens?.length > 0 && (
+                <p className="text-sm text-amber-800">
+                  Allergens: {selectedItem.allergens.join(", ")}
+                </p>
+              )}
+              {selectedItem.toppings?.length > 0 && (
+                <p className="text-sm text-gray-600">
+                  Toppings: {selectedItem.toppings.join(", ")}
+                </p>
+              )}
+
+              {optionGroups.map((group) => (
+                <fieldset key={group.key} className="space-y-2 rounded-lg border border-gray-200 p-3">
+                  <legend className="px-1 text-sm font-medium text-gray-800">
+                    {group.label}
+                  </legend>
+                  {group.options.map((option) => {
+                    const optionId = String(option._id);
+                    return (
+                      <label key={`${group.key}-${optionId}`} className="flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={selection[group.key].includes(optionId)}
+                          onChange={() => toggleOption(group.key, optionId)}
+                          className="h-4 w-4"
+                        />
+                        <span>{option.name} (+PKR {option.price.toFixed(2)})</span>
+                      </label>
+                    );
+                  })}
+                </fieldset>
+              ))}
+
+              <div className="flex items-center justify-between border-t pt-4">
+                <p className="font-semibold text-gray-900">
+                  {typeof selectedItem.price === "number"
+                    ? `PKR ${(selectedItem.price + selectedPrice).toFixed(2)}`
+                    : selectedItem.price}
+                </p>
+                <button
+                  type="button"
+                  onClick={addSelectedItemToCart}
+                  disabled={!selectedItem._id || selectedItem.isAvailable === false}
+                  className="rounded-lg bg-orange-600 px-5 py-3 font-medium text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                >
+                  {!selectedItem._id
+                    ? "Sample item"
+                    : selectedItem.isAvailable === false
+                      ? "Unavailable"
+                      : "Add to cart"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
-      </div>
-    </section>
+      </dialog>
+    </>
   );
 }
 

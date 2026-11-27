@@ -5,17 +5,30 @@ import { z } from "zod";
 import riderController from "../../../controllers/riderController";
 
 const optionalText = z.string().trim().min(2, "Use at least 2 characters.").max(60, "Value is too long.").or(z.literal(""));
+const optionalImage = z.custom(
+  (files) =>
+    !files?.length ||
+    (typeof FileList !== "undefined" &&
+      files instanceof FileList &&
+      files.length === 1 &&
+      ["image/jpeg", "image/png", "image/webp"].includes(files[0].type) &&
+      files[0].size <= 5 * 1024 * 1024),
+  "Choose a JPEG, PNG, or WebP image up to 5 MB.",
+);
 const schema = z.object({
   riderId: z.string().trim().min(1, "Enter a rider ID.").max(64, "Rider ID is too long."),
   name: optionalText,
   email: z.union([z.literal(""), z.string().trim().email("Enter a valid email.").max(254, "Email is too long.")]),
   phone: z.string().trim().regex(/^(?=.*\d)\+?[0-9()\-\s]{7,20}$/, "Enter a valid phone number.").or(z.literal("")),
+  deliveryZone: z.string().trim().max(100, "Delivery zone is too long."),
   vehicleType: z.enum(["", "bicycle", "motorcycle", "car"]),
   vehicleRegistration: z.string().trim().regex(/^(?=.*[A-Za-z0-9])[A-Za-z0-9 -]{3,15}$/, "Enter a valid registration.").or(z.literal("")),
   status: z.enum(["", "active", "inactive"]),
+  profileImage: optionalImage,
 }).refine(
-  ({ name, email, phone, vehicleType, vehicleRegistration, status }) =>
-    [name, email, phone, vehicleType, vehicleRegistration, status].some((value) => value !== ""),
+  ({ name, email, phone, deliveryZone, vehicleType, vehicleRegistration, status, profileImage }) =>
+    [name, email, phone, deliveryZone, vehicleType, vehicleRegistration, status].some((value) => value !== "") ||
+    Boolean(profileImage?.length),
   { path: ["name"], message: "Enter at least one field to update." },
 );
 
@@ -23,14 +36,23 @@ function UpdateRider() {
   const [message, setMessage] = useState("");
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "", phone: "", vehicleType: "", vehicleRegistration: "", status: "" },
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      deliveryZone: "",
+      vehicleType: "",
+      vehicleRegistration: "",
+      status: "",
+    },
   });
 
-  const onSubmit = async ({ riderId, ...fields }) => {
+  const onSubmit = async ({ riderId, profileImage, ...fields }) => {
     setMessage("");
     const values = Object.fromEntries(
       Object.entries(fields).filter(([, value]) => value !== ""),
     );
+    if (profileImage?.length) values.profileImage = profileImage;
     try {
       await riderController.update(riderId, values);
       reset();
@@ -82,6 +104,11 @@ function UpdateRider() {
         {errors.phone && <p className="text-sm text-red-600">{errors.phone.message}</p>}
       </label>
       <label className="block">
+        Delivery zone
+        <input {...register("deliveryZone")} className="mt-1 w-full rounded-md border p-2" />
+        {errors.deliveryZone && <p className="text-sm text-red-600">{errors.deliveryZone.message}</p>}
+      </label>
+      <label className="block">
         Vehicle type
         <select
           {...register("vehicleType")}
@@ -115,6 +142,16 @@ function UpdateRider() {
           <option value="inactive">Inactive</option>
         </select>
         {errors.status && <p className="text-sm text-red-600">{errors.status.message}</p>}
+      </label>
+      <label className="block">
+        Replace rider profile photo (optional)
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          {...register("profileImage")}
+          className="mt-1 w-full rounded-md border p-2"
+        />
+        {errors.profileImage && <p className="text-sm text-red-600">{errors.profileImage.message}</p>}
       </label>
       <button disabled={isSubmitting} className="rounded-md bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50">
         {isSubmitting ? "Updating..." : "Update rider"}
